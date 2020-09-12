@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workspaceFilter version="1.0">
+    <filter root="/conf/classic-app" mode="merge"/>
+    <filter root="/content/classic-app" mode="merge"/>
+    <filter root="/content/dam/classic-app" mode="merge"/>
+    <filter root="/content/experience-fragments/classic-app" mode="merge"/>
+</workspaceFilter>

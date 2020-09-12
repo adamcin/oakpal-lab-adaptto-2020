@@ -1,0 +1,311 @@
+# Exercise 2: Integrating 3rd-Party Checklists
+
+## Objectives
+
+* Integrate the `basic` checklist that is included with `oakpal-core` and override some configuration parameters.
+
+* Embed the ACS AEM Commons Content Packages and integrate the `acs-commons-integrators` checklist to catch any issues
+with how your project is using its features.
+
+## Exercise
+
+In Exercise 1, we added a single check to the `all` package scan, with the name `basic/sling-jcr-installer`. This name
+indicates that we are referencing a check spec named `sling-jcr-installer` defined by the `basic` checklist in 
+`oakpal-core` (because there aren't any other checklists on the classpath right now). 
+
+NOTE: You can also reference this same check spec in a more specific, fully-qualified form 
+(`net.adamcin.oakpal.core/basic/sling-jcr-installer`), or in a less specific form using only the name 
+(`sling-jcr-installer`). 
+
+The `basic` checklist defines many more standard package checks, which are documented on the oakpal website at 
+[the basic checklist](http://adamcin.net/oakpal/oakpal-core/the-basic-checklist.html). Most of these checks are 
+generally useful to include when scanning any package, and certainly provide a good starting point for AEM projects.
+
+Instead of listing all of these checks one-by-one, let's replace the `<checks>` element in `classic-app/all/pom.xml` 
+with a `<checklists>` element, where we will specify the `basic` checklist.
+
+```xml
+<plugin>
+    <groupId>net.adamcin.oakpal</groupId>
+    <artifactId>oakpal-maven-plugin</artifactId>
+    <configuration>
+        <checklists>
+            <checklist>basic</checklist>
+        </checklists>
+    </configuration>
+</plugin>
+```
+
+Now when you run `mvn clean install`, you will see the build fail with some new violations.
+
+```
+[INFO] Check report summary written to /Users/madamcin/oss/oakpal-lab-adaptto-2020/classic-app/all/target/oakpal-plugin/reports/oakpal-summary.json
+[INFO] OakPAL Check Reports
+[INFO]   net.adamcin.oakpal.core/basic/acHandling
+[ERROR]    +- <MAJOR> acHandling mode MERGE is forbidden. allowed acHandling values in levelSet:only_add are [MERGE_PRESERVE, IGNORE] [classic-app.ui.apps-1.0-SNAPSHOT.zip]
+[ERROR]    +- <MAJOR> acHandling mode MERGE is forbidden. allowed acHandling values in levelSet:only_add are [MERGE_PRESERVE, IGNORE] [classic-app.ui.content-1.0-SNAPSHOT.zip]
+[ERROR]    +- <MAJOR> acHandling mode MERGE is forbidden. allowed acHandling values in levelSet:only_add are [MERGE_PRESERVE, IGNORE] [core.wcm.components.extensions.amp.content-2.11.0.zip]
+[INFO]   net.adamcin.oakpal.core/basic/filterSets
+[INFO]     +- <MINOR> non-default import mode MERGE defined for filterSet with root /conf/classic-app [classic-app.ui.content-1.0-SNAPSHOT.zip]
+[INFO]     +- <MINOR> non-default import mode MERGE defined for filterSet with root /content/classic-app [classic-app.ui.content-1.0-SNAPSHOT.zip]
+[INFO]     +- <MINOR> non-default import mode MERGE defined for filterSet with root /content/dam/classic-app [classic-app.ui.content-1.0-SNAPSHOT.zip]
+[INFO]     +- <MINOR> non-default import mode MERGE defined for filterSet with root /content/experience-fragments/classic-app [classic-app.ui.content-1.0-SNAPSHOT.zip]
+[INFO]     +- <MINOR> non-default import mode MERGE defined for filterSet with root /apps/rep:policy [core.wcm.components.extensions.amp.content-2.11.0.zip]
+[ERROR] ** Violations were reported at or above severity: MAJOR **
+```
+
+The first thing to recognize is that violations may be reported at one of three severity levels, `MINOR`, `MAJOR`, or 
+`SEVERE`. By default, `oakpal` will fail the build if any `MAJOR` or `SEVERE` violations are reported, but the 
+`failOnSeverity` configuration property can be set to `MINOR` to be more strict, or `SEVERE` to be more lenient.
+
+In the case of our most recent build, the violations reported by `basic/acHandling` were `MAJOR` violations, while those
+reported by `basic/filterSets` were `MINOR` violations. With the default `failOnSeverity=MAJOR` config, we only have to
+resolve the violations reported by `basic/acHandling` to get the build to pass.
+
+The second thing to recognize is that even though we removed the explicit `basic/sling-jcr-installer` check spec from 
+the plugin configuration, it is clearly still active, because the reported violations are all associated with embedded
+package ids (as in `[classic-app.ui.apps-1.0-SNAPSHOT.zip]`), not the top level `classic-app.all` package id.
+
+This can be confirmed by inspecting the oakpal-summary.json file, which should look something like the following:
+
+```json
+{
+  "reports":[
+    {
+      "checkName":"DefaultErrorListener"
+    },
+    {
+      "checkName":"net.adamcin.oakpal.core/basic/paths"
+    },
+    {
+      "checkName":"net.adamcin.oakpal.core/basic/subpackages"
+    },
+    {
+      "checkName":"net.adamcin.oakpal.core/basic/acHandling",
+      "violations":[
+        {
+          "severity":"MAJOR",
+          "description":"acHandling mode MERGE is forbidden. allowed acHandling values in levelSet:only_add are [MERGE_PRESERVE, IGNORE]",
+          "packages":[
+            "org.adaptto.oakpal:classic-app.ui.apps:1.0-SNAPSHOT"
+          ]
+        },
+        {
+          "severity":"MAJOR",
+          "description":"acHandling mode MERGE is forbidden. allowed acHandling values in levelSet:only_add are [MERGE_PRESERVE, IGNORE]",
+          "packages":[
+            "org.adaptto.oakpal:classic-app.ui.content:1.0-SNAPSHOT"
+          ]
+        },
+        {
+          "severity":"MAJOR",
+          "description":"acHandling mode MERGE is forbidden. allowed acHandling values in levelSet:only_add are [MERGE_PRESERVE, IGNORE]",
+          "packages":[
+            "adobe/cq60:core.wcm.components.extensions.amp.content:2.11.0"
+          ]
+        }
+      ]
+    },
+    {
+      "checkName":"net.adamcin.oakpal.core/basic/filterSets",
+      "violations":[
+        {
+          "severity":"MINOR",
+          "description":"non-default import mode MERGE defined for filterSet with root /conf/classic-app",
+          "packages":[
+            "org.adaptto.oakpal:classic-app.ui.content:1.0-SNAPSHOT"
+          ]
+        },
+        {
+          "severity":"MINOR",
+          "description":"non-default import mode MERGE defined for filterSet with root /content/classic-app",
+          "packages":[
+            "org.adaptto.oakpal:classic-app.ui.content:1.0-SNAPSHOT"
+          ]
+        },
+        {
+          "severity":"MINOR",
+          "description":"non-default import mode MERGE defined for filterSet with root /content/dam/classic-app",
+          "packages":[
+            "org.adaptto.oakpal:classic-app.ui.content:1.0-SNAPSHOT"
+          ]
+        },
+        {
+          "severity":"MINOR",
+          "description":"non-default import mode MERGE defined for filterSet with root /content/experience-fragments/classic-app",
+          "packages":[
+            "org.adaptto.oakpal:classic-app.ui.content:1.0-SNAPSHOT"
+          ]
+        },
+        {
+          "severity":"MINOR",
+          "description":"non-default import mode MERGE defined for filterSet with root /apps/rep:policy",
+          "packages":[
+            "adobe/cq60:core.wcm.components.extensions.amp.content:2.11.0"
+          ]
+        }
+      ]
+    },
+    {
+      "checkName":"net.adamcin.oakpal.core/basic/overlaps"
+    },
+    {
+      "checkName":"net.adamcin.oakpal.core/basic/composite-store-alignment"
+    },
+    {
+      "checkName":"net.adamcin.oakpal.core/basic/sling-jcr-installer"
+    }
+  ]
+}
+```
+
+Notice the presence of the sling-jcr-installer check towards the end of the report.
+
+```json
+    {
+      "checkName":"net.adamcin.oakpal.core/basic/sling-jcr-installer"
+    }
+```
+
+So, how should we resolve the `basic/acHandling` violations? 
+
+There are three different approaches to resolving an OakPAL violation.
+
+1. *Change the content package in some way to satisfy the check's acceptance criteria*: This is usually the best approach, 
+assuming the check's criteria is designed with content safety in mind, especially if ample consideration has already 
+been given to the proper checklist configuration for the project. But if you are introducing the check to your project 
+for the first time, you may want to evaluate whether the check's default assumptions are appropriate for your particular 
+project's requirements before refactoring your content packages to satisfy the check. This analysis may convince you to 
+choose one of the other two approaches.
+
+2. *Configure the check so that its acceptance criteria is more closely tailored to your project requirements*: The 
+checks applied by the `basic` checklist support many configuration parameters, like changing the reported severity, or
+specifying the check's scope using `include`/`exclude` rules with regular expressions matched against content paths. If
+the default configuration doesn't closely describe your project's content package design, it may be possible to narrowly 
+tailor the check to fit a variety of different situations in your project. If you determine that it is not possible to 
+reconfigure the check so that it still provides some value in your build, you can skip the check altogether.
+
+3. *Skip the check altogether*: This is usually the easiest approach. If it's not worth keeping in the build, just skip 
+the check. Any check applied by a checklist can be skipped, independent of the check's own documented configuration 
+parameters.
+
+### Configuring or Skipping Checklist Checks
+
+At this point, let's assume that the content packages triggering the violations are structured exactly as intended, that
+the project team is well aware of all the effects of installing these packages in their current state, and that it is
+the checks' default acceptance criteria that is misaligned to the project requirements. We will start with the easiest 
+approach, which is to skip the `basic/acHandling` check.
+
+Add the `basic/acHandling` check with the `<skip>true</skip>` setting to the plugin configuration in 
+`classic-app/all/pom.xml`, as shown below:
+
+```xml
+<plugin>
+    <groupId>net.adamcin.oakpal</groupId>
+    <artifactId>oakpal-maven-plugin</artifactId>
+    <configuration>
+        <checklists>
+            <checklist>basic</checklist>
+        </checklists>
+        <checks>
+            <check>
+                <name>basic/acHandling</name>
+                <skip>true</skip>
+            </check>
+        </checks>
+    </configuration>
+</plugin>
+```
+
+Now run `mvn clean install`. As expected, the build succeeds, and the oakpal plugin generates the following report:
+
+```
+[INFO] Check report summary written to /Users/madamcin/oss/oakpal-lab-adaptto-2020/classic-app/all/target/oakpal-plugin/reports/oakpal-summary.json
+[INFO] OakPAL Check Reports
+[INFO]   net.adamcin.oakpal.core/basic/filterSets
+[INFO]     +- <MINOR> non-default import mode MERGE defined for filterSet with root /conf/classic-app [classic-app.ui.content-1.0-SNAPSHOT.zip]
+[INFO]     +- <MINOR> non-default import mode MERGE defined for filterSet with root /content/classic-app [classic-app.ui.content-1.0-SNAPSHOT.zip]
+[INFO]     +- <MINOR> non-default import mode MERGE defined for filterSet with root /content/dam/classic-app [classic-app.ui.content-1.0-SNAPSHOT.zip]
+[INFO]     +- <MINOR> non-default import mode MERGE defined for filterSet with root /content/experience-fragments/classic-app [classic-app.ui.content-1.0-SNAPSHOT.zip]
+[INFO]     +- <MINOR> non-default import mode MERGE defined for filterSet with root /apps/rep:policy [core.wcm.components.extensions.amp.content-2.11.0.zip]
+```
+
+The `basic/filterSets` violations are still reported, but since they are `MINOR`, the build succeeds because the 
+`basic/acHandling` violations are no longer being reported.
+
+Of course, the `basic/acHandling` check is designed to prevent a package from being installed to a persistent Oak 
+repository that will unintentionally (or maliciously) overwrite or clear the ACLs defined by other application 
+deployments or those manually created by users after the application's initial launch. 
+
+In fact, the `basic/acHandling` check spec configuration overrides the default configuration of the 
+`net.adamcin.oakpal.core.checks.AcHandling` check's Java implementation (`levelSet:no_unsafe`) to only allow 
+additive ACEs (`levelSet:only_add`), but this arguably sacrifices determinism in favor of an extra layer of safety.
+
+Instead of skipping the check, let's change the `levelSet` config property back to the implementation default value of
+`no_unsafe`, to see if this is sufficient for our project requirements, so that we can still use the `basic/acHandling` 
+check to prevent any packages in our project from say, setting `acHandling` to `clear` and deleting all the ACLs in the 
+repository upon installation.
+
+```xml
+<plugin>
+    <groupId>net.adamcin.oakpal</groupId>
+    <artifactId>oakpal-maven-plugin</artifactId>
+    <configuration>
+        <checklists>
+            <checklist>basic</checklist>
+        </checklists>
+        <checks>
+            <check>
+                <name>basic/acHandling</name>
+                <config>
+                    <levelSet>no_unsafe</levelSet>
+                </config>
+            </check>
+        </checks>
+    </configuration>
+</plugin>
+```
+
+Once again, the `mvn clean install` execution succeeds with same report from the `oakpal-maven-plugin`, except this time
+we know that the `basic/acHandling` check was active and satisfied:
+
+```
+[INFO] Check report summary written to /Users/madamcin/oss/oakpal-lab-adaptto-2020/classic-app/all/target/oakpal-plugin/reports/oakpal-summary.json
+[INFO] OakPAL Check Reports
+[INFO]   net.adamcin.oakpal.core/basic/filterSets
+[INFO]     +- <MINOR> non-default import mode MERGE defined for filterSet with root /conf/classic-app [classic-app.ui.content-1.0-SNAPSHOT.zip]
+[INFO]     +- <MINOR> non-default import mode MERGE defined for filterSet with root /content/classic-app [classic-app.ui.content-1.0-SNAPSHOT.zip]
+[INFO]     +- <MINOR> non-default import mode MERGE defined for filterSet with root /content/dam/classic-app [classic-app.ui.content-1.0-SNAPSHOT.zip]
+[INFO]     +- <MINOR> non-default import mode MERGE defined for filterSet with root /content/experience-fragments/classic-app [classic-app.ui.content-1.0-SNAPSHOT.zip]
+[INFO]     +- <MINOR> non-default import mode MERGE defined for filterSet with root /apps/rep:policy [core.wcm.components.extensions.amp.content-2.11.0.zip]
+```
+
+### Checklist Checks as Templates
+
+Some checklists, including the `basic` checklist, define some checks that are skipped-by-default. Once a check is skipped, 
+it cannot be unskipped by overriding the spec by name as you would if you were overriding the config. To make use of a 
+check that has been skipped-by-default, you must reference the check by name in the `<template>` parameter, and also 
+provide your own `<name>` for your instance of the check.
+
+For example, to use the `basic/echo` check, you have add something like this to the plugin configuration:
+
+```xml
+<check>
+    <name>my-echo</name>
+    <template>basic/echo</template>
+</check>
+```
+
+There are a variety of reasons for a checklist to specify a check this. For one, some checks don't have an obvious 
+universal default configuration. For example, applying the `basic/expectPaths` check only makes sense when you have a 
+list of required content paths specific to the contents of a particular package. Another reason for skipped-by-default 
+is demonstrated by `basic/jcrProperties`, which, like `basic/expectPaths`, lacks a universal default configuration, but 
+which is also designed to be declared perhaps many times for a single scan, defining a separate instance of the check 
+for each scope of property evaluation. Finally, another reason for skipped-by-default is when providing checks that are 
+useful for debugging, like `basic/echo`, which is very verbose and yet enforces no acceptance criteria. Ultimately, the 
+minimal justification for including such definitions in a checklist at all is to provide a stable layer of abstraction 
+by way of the check name, so that consumers of a checklist aren't tightly coupled to specific implementation details, 
+like a java class name or a script path, identifiers which might be subject to refactoring without warning at some 
+point in the future.
+
+

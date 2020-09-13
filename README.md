@@ -7,6 +7,8 @@ Exercises for the OakPAL Lab at adaptTo 2020 conf
 
 * [Exercise 2: Integrating 3rd-Party Checklists](Exercise_02.md)
 
+* [Exercise 3: Writing your own checks](Exercise_03.md)
+
 ## Notes on the Construction of this repository
 
 1. ran the following command within the root directory to create the `classic-app` folder:

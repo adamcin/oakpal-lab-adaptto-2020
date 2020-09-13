@@ -319,4 +319,4 @@ installed to an AEM content repository.
 In the next exercise, we will explore how to ensure that your content package artifacts follow best practices published 
 by other projects.
 
-[Continue to Exercise 2: Integrating 3rd-Party Checklists](Exercise_02.md)
+[Continue to Exercise 2: Integrating OakPAL Checklists](Exercise_02.md)

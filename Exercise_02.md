@@ -356,7 +356,7 @@ plugin element in `classic-app/pom.xml`, like so:
 <plugin>
     <groupId>net.adamcin.oakpal</groupId>
     <artifactId>oakpal-maven-plugin</artifactId>
-    <version>2.2.1</version>
+    <version>${oakpal.version}</version>
     <configuration>
         <slingNodeTypes>true</slingNodeTypes>
         <jcrNamespaces>

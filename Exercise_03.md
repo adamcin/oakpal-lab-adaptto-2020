@@ -10,7 +10,7 @@
 
 ## Exercise
 
-The basic task for defining an OakPAL check from scratch to implement the [`ProgressCheck` interface](https://github.com/adamcin/oakpal/blob/v2.2.1/api/src/main/java/net/adamcin/oakpal/api/ProgressCheck.java).
+The basic task for defining an OakPAL check from scratch to implement the [`ProgressCheck` interface](https://github.com/adamcin/oakpal/blob/v2.2.2/api/src/main/java/net/adamcin/oakpal/api/ProgressCheck.java).
 Fundamentally, this is a simple Java interface, but OakPAL also includes support for script-based progress checks via the JSR-223 
 scripting API. 
 
@@ -89,7 +89,7 @@ Now run `mvn clean install -pl :classic-app.all` again. You should experience a 
 working before.
 
 ```
-[INFO] --- oakpal-maven-plugin:2.2.2-SNAPSHOT:scan (default-scan) @ classic-app.all ---
+[INFO] --- oakpal-maven-plugin:2.2.2:scan (default-scan) @ classic-app.all ---
 [INFO] Sling-Nodetypes: Discovered node types: jar:file:/Users/madamcin/.m2/repository/biz/netcentric/aem/aem-nodetypes/6.5.5.0/aem-nodetypes-6.5.5.0.jar!/aem.cnd
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD FAILURE
@@ -97,7 +97,7 @@ working before.
 [INFO] Total time:  4.139 s
 [INFO] Finished at: 2020-09-13T11:57:23-07:00
 [INFO] ------------------------------------------------------------------------
-[ERROR] Failed to execute goal net.adamcin.oakpal:oakpal-maven-plugin:2.2.2-SNAPSHOT:scan (default-scan) on project classic-app.all: Failed to execute package scan. Error while loading progress checks.: Failed to load package check . (impl: myFirstCheck.js): ReferenceError: "println" is not defined in <eval> at line number 17 -> [Help 1]
+[ERROR] Failed to execute goal net.adamcin.oakpal:oakpal-maven-plugin:2.2.2:scan (default-scan) on project classic-app.all: Failed to execute package scan. Error while loading progress checks.: Failed to load package check . (impl: myFirstCheck.js): ReferenceError: "println" is not defined in <eval> at line number 17 -> [Help 1]
 [ERROR]
 [ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
 [ERROR] Re-run Maven using the -X switch to enable full debug logging.
@@ -123,7 +123,7 @@ Now run `mvn clean install -pl :classic-app.all`. You should see a successful re
 see the message effect of that ~~println~~ print statement in the output:
 
 ```
-[INFO] --- oakpal-maven-plugin:2.2.2-SNAPSHOT:scan (default-scan) @ classic-app.all ---
+[INFO] --- oakpal-maven-plugin:2.2.2:scan (default-scan) @ classic-app.all ---
 [INFO] Sling-Nodetypes: Discovered node types: jar:file:/Users/madamcin/.m2/repository/biz/netcentric/aem/aem-nodetypes/6.5.5.0/aem-nodetypes-6.5.5.0.jar!/aem.cnd
 Do I look like a JavaScript expert?
 [INFO] Found a new index node [reference]. Reindexing is requested
@@ -241,7 +241,7 @@ function importedPath(packageId /* PackageId */, path /* String */, node /* Node
 Run `mvn clean install -pl :classic-app.all`, and confirm that you get some output like this:
 
 ```
-[INFO] --- oakpal-maven-plugin:2.2.2-SNAPSHOT:scan (default-scan) @ classic-app.all ---
+[INFO] --- oakpal-maven-plugin:2.2.2:scan (default-scan) @ classic-app.all ---
 [INFO] Sling-Nodetypes: Discovered node types: jar:file:/Users/madamcin/.m2/repository/biz/netcentric/aem/aem-nodetypes/6.5.5.0/aem-nodetypes-6.5.5.0.jar!/aem.cnd
 Do I look like a JavaScript expert?
 [INFO] Found a new index node [reference]. Reindexing is requested
@@ -399,7 +399,7 @@ We'll skip the verbosity about the ProgressCheck events and move right to the po
 your checks in Java is that you get the benefit of real-time type checking in your IDE, instead of having to
 use `mvn clean install -pl :classic-app.all` as a poor man's REPL.
 
-Of course, this requires explicitly adding the `oakpal-core` dependency to your `classic-app/all/pom.xml`, but first,
+Of course, this requires explicitly adding the `oakpal-api` dependency to your `classic-app/all/pom.xml`, but first,
 let's prepare for proper version management, since this will dependency will likely be reused in other modules going 
 forward.
 
@@ -408,7 +408,7 @@ In the `classic-app/pom.xml` parent pom, add the following dependency at the end
 ```xml
         <dependency>
             <groupId>net.adamcin.oakpal</groupId>
-            <artifactId>oakpal-core</artifactId>
+            <artifactId>oakpal-api</artifactId>
             <version>${oakpal.version}</version>
         </dependency>
     </dependencies>
@@ -421,7 +421,7 @@ section. Notice the `<scope>test</scope>` element:
 ```xml
     <dependency>
         <groupId>net.adamcin.oakpal</groupId>
-        <artifactId>oakpal-core</artifactId>
+        <artifactId>oakpal-api</artifactId>
         <scope>test</scope>
     </dependency>
 </dependencies>
@@ -514,7 +514,7 @@ private final String myInterestingPath = "/content/classic-app/us/en/jcr:content
 Save the file, and rerun `mvn clean install -pl :classic-app.all`. The command should once again succeed:
 
 ```
-[INFO] --- oakpal-maven-plugin:2.2.2-SNAPSHOT:scan (default-scan) @ classic-app.all ---
+[INFO] --- oakpal-maven-plugin:2.2.2:scan (default-scan) @ classic-app.all ---
 [INFO] Sling-Nodetypes: Discovered node types: jar:file:/Users/madamcin/.m2/repository/biz/netcentric/aem/aem-nodetypes/6.5.5.0/aem-nodetypes-6.5.5.0.jar!/aem.cnd
 [INFO] Found a new index node [reference]. Reindexing is requested
 [INFO] Reindexing will be performed for following indexes: [/oak:index/uuid, /oak:index/reference, /oak:index/nodetype]
@@ -545,17 +545,17 @@ We're really moving now. Let's return to the JSR-223 support demonstrated by the
 a different flavor of scripting that might give us better real-time type checking. We'll continue using our basic check
 logic, to expect that the package imports our interesting path. 
 
-To use the `importedPath` signature with typed arguments, you will need the `oakpal-core` dependency on the `test`-scope
+To use the `importedPath` signature with typed arguments, you will need the `oakpal-api` dependency on the `test`-scope
 class path that we added for the Java check.
 
 We will also need to add the `groovy-all` pom dependency the same way, so that oakpal has access to the groovy script
 engine. Edit `classic-app/all/pom.xml` and add it to the end of the `<dependencies>` element, immediately after your 
-`oakpal-core` dependency, like this:
+`oakpal-api` dependency, like this:
 
 ```xml
         <dependency>
             <groupId>net.adamcin.oakpal</groupId>
-            <artifactId>oakpal-core</artifactId>
+            <artifactId>oakpal-api</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -639,7 +639,7 @@ Now edit `myFirstGroovyCheck.groovy` and fix the value of `myInterestingPath`:
 Save the file, and rerun `mvn clean install -pl :classic-app.all`. The command should once again succeed:
 
 ```
-[INFO] --- oakpal-maven-plugin:2.2.2-SNAPSHOT:scan (default-scan) @ classic-app.all ---
+[INFO] --- oakpal-maven-plugin:2.2.2:scan (default-scan) @ classic-app.all ---
 [INFO] Sling-Nodetypes: Discovered node types: jar:file:/Users/madamcin/.m2/repository/biz/netcentric/aem/aem-nodetypes/6.5.5.0/aem-nodetypes-6.5.5.0.jar!/aem.cnd
 [INFO] Found a new index node [reference]. Reindexing is requested
 [INFO] Reindexing will be performed for following indexes: [/oak:index/uuid, /oak:index/reference, /oak:index/nodetype]
@@ -668,9 +668,4 @@ Once you have reached this point, you have become familiar enough with the featu
 effectively on your own projects to test for a wide variety of scenarios specific to your organization and application
 requirements.
 
-The upcoming exercises will demonstrate how to make your OakPAL checks configurable, and then to centralize your oakpal 
-checks into a single shared module within your maven project and publish your own checklist. Later exercises will 
-demonstrate how to operationalize your maven scan configuration as an Oakpal Plan that can even be run outside of Maven 
-in a CI container pipeline.
-
-[Continue to Exercise 4: Designing OakPAL Checks for Reuse](Exercise_04.md)
+[Continue to Exercise 4: On Your Own](Exercise_04.md)

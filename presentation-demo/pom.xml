@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ |  Copyright 2015 Adobe Systems Incorporated
+ |
+ |  Licensed under the Apache License, Version 2.0 (the "License");
+ |  you may not use this file except in compliance with the License.
+ |  You may obtain a copy of the License at
+ |
+ |      http://www.apache.org/licenses/LICENSE-2.0
+ |
+ |  Unless required by applicable law or agreed to in writing, software
+ |  distributed under the License is distributed on an "AS IS" BASIS,
+ |  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ |  See the License for the specific language governing permissions and
+ |  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- ====================================================================== -->
+    <!-- P R O J E C T  D E S C R I P T I O N                                   -->
+    <!-- ====================================================================== -->
+    <groupId>org.adaptto.oakpal</groupId>
+    <artifactId>demo.ui.content</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>content-package</packaging>
+    <name>OakPAL Demo - UI content</name>
+    <description>UI content package for OakPAL Demo</description>
+
+    <properties>
+        <oakpal.reports>${project.build.directory}/oakpal-plugin/reports</oakpal.reports>
+    </properties>
+
+    <!-- ====================================================================== -->
+    <!-- B U I L D   D E F I N I T I O N                                        -->
+    <!-- ====================================================================== -->
+    <build>
+        <plugins>
+            <!-- ====================================================================== -->
+            <!-- V A U L T   P A C K A G E   P L U G I N S                              -->
+            <!-- ====================================================================== -->
+            <plugin>
+                <groupId>org.apache.jackrabbit</groupId>
+                <artifactId>filevault-package-maven-plugin</artifactId>
+                <version>1.1.4</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <group>org.adaptto.oakpal</group>
+                    <name>demo.ui.content</name>
+                    <packageType>content</packageType>
+                    <accessControlHandling>overwrite</accessControlHandling>
+                    <skipValidation>true</skipValidation>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>net.adamcin.oakpal</groupId>
+                <artifactId>oakpal-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>scan-1</id>
+                        <goals>
+                            <goal>scan</goal>
+                        </goals>
+                        <configuration>
+                            <!-- finish repository initialization after inherited config -->
+                            <repoInit><![CDATA[
+                                create path (sling:Folder) /conf/classic-app/settings
+                                create path (cq:Page) /conf/classic-app/settings/wcm/templates/created-by-author
+                            ]]></repoInit>
+                            <checks>
+                                <check>
+                                    <name>respect-existing-editable-template</name>
+                                    <template>expectPaths</template>
+                                    <config>
+                                        <expectedPaths>
+                                            <path>/conf/classic-app/settings/wcm/templates/created-by-author</path>
+                                        </expectedPaths>
+                                    </config>
+                                </check>
+                            </checks>
+                            <summaryFile>${oakpal.reports}/scan-1.json</summaryFile>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>scan-2</id>
+                        <goals>
+                            <goal>scan</goal>
+                        </goals>
+                        <configuration>
+                            <!-- finish repository initialization after inherited config -->
+                            <repoInit><![CDATA[
+                                create path /content(nt:folder)
+                            ]]></repoInit>
+                            <checks>
+                                <check>
+                                    <name>expect-new-ace-on-us</name>
+                                    <template>expectAces</template>
+                                    <config>
+                                        <principal>classic-app-us-authors</principal>
+                                        <expectedAces>
+                                            <ace>type=allow;privileges=jcr:read;path=/content/classic-app/us</ace>
+                                        </expectedAces>
+                                    </config>
+                                </check>
+                            </checks>
+                            <summaryFile>${oakpal.reports}/scan-2.json</summaryFile>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>scan-3</id>
+                        <goals>
+                            <goal>scan</goal>
+                        </goals>
+                        <configuration>
+                            <!-- finish repository initialization after inherited config -->
+                            <repoInit><![CDATA[
+                                create path /content(nt:folder)
+                                create path (cq:Page) /content/classic-app/us/en
+
+                                create user some-author
+                                set ACL for some-author
+                                    allow jcr:read,rep:write on /content/classic-app/us
+                                end
+                            ]]></repoInit>
+                            <checks>
+                                <check>
+                                    <name>respect-existing-ace-on-us</name>
+                                    <template>expectAces</template>
+                                    <config>
+                                        <principal>some-author</principal>
+                                        <expectedAces>
+                                            <ace>type=allow;privileges=jcr:read,rep:write;path=/content/classic-app/us</ace>
+                                            <ace>type=allow;principal=classic-app-us-authors;privileges=jcr:read;path=/content/classic-app/us</ace>
+                                        </expectedAces>
+                                    </config>
+                                </check>
+                            </checks>
+                            <summaryFile>${oakpal.reports}/scan-3.json</summaryFile>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <goals>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <summaryFiles>
+                                <summaryFile>${oakpal.reports}/scan-1.json</summaryFile>
+                                <summaryFile>${oakpal.reports}/scan-2.json</summaryFile>
+                                <summaryFile>${oakpal.reports}/scan-3.json</summaryFile>
+                            </summaryFiles>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>net.adamcin.oakpal</groupId>
+                    <artifactId>oakpal-maven-plugin</artifactId>
+                    <version>2.2.2</version>
+                    <configuration>
+                        <!-- register node types from biz.netcentric.aem:aem-nodetypes:6.5.5.0 -->
+                        <slingNodeTypes>true</slingNodeTypes>
+                        <repoInitFiles>
+                            <file>src/test/resources/aem-repo-init.txt</file>
+                        </repoInitFiles>
+                        <deferBuildFailure>true</deferBuildFailure>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>biz.netcentric.aem</groupId>
+                            <artifactId>aem-nodetypes</artifactId>
+                            <version>6.5.5.0</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <!-- ====================================================================== -->
+    <!-- D E P E N D E N C I E S                                                -->
+    <!-- ====================================================================== -->
+    <dependencies>
+    </dependencies>
+
+    <profiles>
+        <!-- ====================================================== -->
+        <!-- A D O B E P U B L I C P R O F I L E -->
+        <!-- ====================================================== -->
+        <profile>
+            <id>adobe-public</id>
+
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+
+            <properties>
+                <releaseRepository-Id>adobe-public-releases</releaseRepository-Id>
+                <releaseRepository-Name>Adobe Public Releases</releaseRepository-Name>
+                <releaseRepository-URL>https://repo.adobe.com/nexus/content/groups/public</releaseRepository-URL>
+            </properties>
+
+            <repositories>
+                <repository>
+                    <id>adobe-public-releases</id>
+                    <name>Adobe Public Repository</name>
+                    <url>https://repo.adobe.com/nexus/content/groups/public</url>
+                    <releases>
+                        <enabled>true</enabled>
+                        <updatePolicy>never</updatePolicy>
+                    </releases>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>adobe-public-releases</id>
+                    <name>Adobe Public Repository</name>
+                    <url>https://repo.adobe.com/nexus/content/groups/public</url>
+                    <releases>
+                        <enabled>true</enabled>
+                        <updatePolicy>never</updatePolicy>
+                    </releases>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+    </profiles>
+</project>

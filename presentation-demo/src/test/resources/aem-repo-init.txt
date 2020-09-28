@@ -1,0 +1,2 @@
+register namespace (crx) http://www.day.com/crx/1.0
+register privilege crx:replicate

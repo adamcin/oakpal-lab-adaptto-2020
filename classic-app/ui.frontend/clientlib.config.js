@@ -34,7 +34,7 @@ const libsBaseConfig = {
   allowProxy: true,
   serializationFormat: 'xml',
   cssProcessor: ['default:none', 'min:none'],
-  jsProcessor: ['default:none', 'min:none']
+  jsProcessor: ['default:none', 'min:gcc']
 };
 
 // Config for `aem-clientlib-generator`

@@ -63,7 +63,7 @@ every time you wish to upgrade your oakpal version in the future. See below:
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <componentGroupName>AEM Classic App</componentGroupName>
-    <oakpal.version>2.2.1</oakpal.version>
+    <oakpal.version>2.2.2</oakpal.version>
 </properties>
 ```
 
@@ -101,7 +101,7 @@ Run `mvn clean install` again and confirm that the oakpal-maven-plugin:scan goal
 during the classic-app.all module.
 
 ```
-[INFO] --- oakpal-maven-plugin:2.2.2-SNAPSHOT:scan (default-scan) @ classic-app.all ---
+[INFO] --- oakpal-maven-plugin:2.2.2:scan (default-scan) @ classic-app.all ---
 [INFO] Found a new index node [reference]. Reindexing is requested
 [INFO] Reindexing will be performed for following indexes: [/oak:index/uuid, /oak:index/reference, /oak:index/nodetype]
 [INFO] Indexing report
@@ -188,7 +188,7 @@ Now run `mvn clean install` again, and don't panic:
 [INFO] Total time:  43.780 s
 [INFO] Finished at: 2020-09-12T09:09:42-07:00
 [INFO] ------------------------------------------------------------------------
-[ERROR] Failed to execute goal net.adamcin.oakpal:oakpal-maven-plugin:2.2.2-SNAPSHOT:scan (default-scan) on project classic-app.all: ** Violations were reported at or above severity: MAJOR ** -> [Help 1]
+[ERROR] Failed to execute goal net.adamcin.oakpal:oakpal-maven-plugin:2.2.2:scan (default-scan) on project classic-app.all: ** Violations were reported at or above severity: MAJOR ** -> [Help 1]
 ```
 
 The scan is now failing with a bunch of errors, but they all derive from the same issue. Now that we enabled the 
@@ -204,7 +204,7 @@ declaration in `classic-app/pom.xml`:
 <plugin>
     <groupId>net.adamcin.oakpal</groupId>
     <artifactId>oakpal-maven-plugin</artifactId>
-    <version>2.2.2</version>
+    <version>${oakpal.version}</version>
     <configuration>
         <slingNodeTypes>true</slingNodeTypes>
     </configuration>
@@ -266,7 +266,7 @@ javax.jcr.security.AccessControlException: No such privilege crx:replicate)
 [INFO] Total time:  36.760 s
 [INFO] Finished at: 2020-09-12T09:18:47-07:00
 [INFO] ------------------------------------------------------------------------
-[ERROR] Failed to execute goal net.adamcin.oakpal:oakpal-maven-plugin:2.2.2-SNAPSHOT:scan (default-scan) on project classic-app.all: ** Violations were reported at or above severity: MAJOR ** -> [Help 1]
+[ERROR] Failed to execute goal net.adamcin.oakpal:oakpal-maven-plugin:2.2.2:scan (default-scan) on project classic-app.all: ** Violations were reported at or above severity: MAJOR ** -> [Help 1]
 ```
 
 Now we have only a relative handful of violations listed, which is still more than the zero violations we would expect, 
@@ -280,7 +280,7 @@ trivial to add to the global OakPAL config in `classic-app/pom.xml`, so let's do
 <plugin>
     <groupId>net.adamcin.oakpal</groupId>
     <artifactId>oakpal-maven-plugin</artifactId>
-    <version>2.2.2</version>
+    <version>${oakpal.version}</version>
     <configuration>
         <slingNodeTypes>true</slingNodeTypes>
         <jcrNamespaces>

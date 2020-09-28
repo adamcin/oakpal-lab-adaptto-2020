@@ -569,7 +569,7 @@ For example, an equivalent structure using only inline JSON looks like this:
 </check>
 ```
 
-For more details on the XML to JSON conversion, read the [source of the JsonConverter](https://github.com/adamcin/oakpal/blob/v2.2.1/maven/src/main/java/net/adamcin/oakpal/maven/component/JsonConverter.java).
+For more details on the XML to JSON conversion, read the [source of the JsonConverter](https://github.com/adamcin/oakpal/blob/v2.2.2/maven/src/main/java/net/adamcin/oakpal/maven/component/JsonConverter.java).
 
 At this point you may remove the `content-class-aem65` checklist and the `content-classifications` check from 
 `classic-app/all/pom.xml`, and the `acs-aem-commons-oakpal-checks` dependency from `classic-app/pom.xml`. 

@@ -107,8 +107,8 @@ we should try to make the QA experience as painless as possible.
 Write a progress check to help our developers identify where they have made mistakes, before the authors get a chance to
 run into them. Report any of the following as MINOR violations:
 
-* Any policy mapping node under `/conf/classic-app/settings/wcm/template/*/policies` or 
-`/conf/classic-app/settings/wcm/template/*/policies` that does not specify a `cq:policy` property, or whose `cq:policy` 
+* Any policy mapping node under `/conf/classic-app/settings/wcm/templates/*/policies` or 
+`/conf/classic-app/settings/wcm/template-types/*/policies` that does not specify a `cq:policy` property, or whose `cq:policy` 
 property does not resolve to a policy definition under `/conf/classic-app/settings/wcm/policies`.
 
 * Any empty container component node defined the `initial` or `structure` pages of a `template` or `template-type` under 

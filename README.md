@@ -9,7 +9,7 @@ Exercises for the OakPAL Lab at adaptTo 2020 conf
 
 * [Exercise 3: Writing your own checks](Exercise_03.md)
 
-* [Exercise 4: Designing OakPAL Checks for Reuse](Exercise_04.md)
+* [Exercise 4: On Your Own](Exercise_04.md)
 
 ## Notes on the Construction of this repository
 
